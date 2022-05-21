@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name:  bk
+spec:
+  selector:
+    matchLabels:
+      app:  bk
+      release:  bk
+  serviceName:  bk
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app:  bk
+        release:  bk
+    spec:
+      serviceAccountName: pulsar
+      terminationGracePeriodSeconds: 30
+      initContainers:
+      - name: waitfor
+        image: ghcr.io/liangyuanpeng/waitfor:v1.0.0
+        imagePullPolicy: IfNotPresent
+        args:
+        - --jobname 
+        - pulsar-init
+      containers:
+      - name:  bk
+        image: apachepulsar/pulsar:2.10.0
+        imagePullPolicy: IfNotPresent
+        command: ["sh","-c"]
+        args: ["bin/apply-config-from-env.py conf/client.conf && bin/apply-config-from-env.py conf/bookkeeper.conf && bin/pulsar bookie"]
+        env:
+        - name: PULSAR_PREFIX_metadataServiceUri
+          value: metadata-store:etcd://etcd:2379/ledgers
+        - name: PULSAR_PREFIX_httpServerPort
+          value: "8080"
+        - name: PULSAR_PREFIX_bookiePort
+          value: "3281"
+        - name: PULSAR_PREFIX_autoRecoveryDaemonEnabled
+          value: "false"
+        ports:
+        - name:  bk
+          containerPort: 3281

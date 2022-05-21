@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: busybox
+  name: busybox
+spec:
+  selector:
+    matchLabels: 
+      app: busybox
+  serviceName: busybox-svc
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      containers:
+        - image: busybox:1.35.0
+          name: busybox
+          imagePullPolicy: IfNotPresent
+          args: ['sleep',"99999999999"]
+
+

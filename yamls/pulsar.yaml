@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pulsar
+spec:
+  selector:
+    matchLabels:
+      app: pulsar
+      release: pulsar
+  serviceName: pulsar
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pulsar
+        release: pulsar
+    spec:
+      serviceAccountName: pulsar
+      terminationGracePeriodSeconds: 30
+      initContainers:
+      - name: waitfor
+        image: ghcr.io/liangyuanpeng/waitfor:v1.0.0
+        imagePullPolicy: IfNotPresent
+        args:
+        - --jobname 
+        - pulsar-init
+      containers:
+      - name: pulsar
+        image: apachepulsar/pulsar:2.10.0
+        imagePullPolicy: IfNotPresent
+        command: ["sh","-c"]
+        args: ["bin/apply-config-from-env.py conf/client.conf && bin/apply-config-from-env.py conf/broker.conf && bin/pulsar broker"]
+        env:
+        - name: PULSAR_PREFIX_tlsRequireTrustedClientCertOnConnect
+          value: "true"
+        - name: PULSAR_PREFIX_functionsWorkerEnabled
+          value: "false"
+        - name: PULSAR_PREFIX_allowAutoTopicCreationType
+          value: "partitioned"
+        - name: PULSAR_PREFIX_metadataStoreUrl
+          value: etcd://etcd:2379
+        - name: PULSAR_PREFIX_configurationMetadataStoreUrl
+          value: etcd://etcd:2379
+        - name: PULSAR_PREFIX_clusterName
+          value: smartoilets
+        - name: PULSAR_PREFIX_managedLedgerDefaultEnsembleSize
+          value: "1"
+        - name: PULSAR_PREFIX_managedLedgerDefaultWriteQuorum
+          value: "1"
+        - name: PULSAR_PREFIX_managedLedgerDefaultAckQuorum
+          value: "1"
+        ports:
+        - name: pulsar
+          containerPort: 6650
+        - name: admin
+          containerPort: 8080
+        - name: httpsadmin
+          containerPort: 8081

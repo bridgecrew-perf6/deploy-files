@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name:  bk
+spec:
+  ports:
+    - name:  bk
+      port: 2181
+  type: ClusterIP
+  selector:
+    app:  bk
+    release:  bk
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  bknp
+spec:
+  ports:
+    - name: bk
+      port: 3281
+      nodePort: 30281
+  type: NodePort
+  selector:
+    app:  bk
+    release:  bk

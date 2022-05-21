@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name:  etcd
+spec:
+  ports:
+    - name:  etcd
+      port: 2279
+  clusterIP: None
+  selector:
+    app:  etcd
+    release:  etcd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name:  etcdnp
+spec:
+  ports:
+    - name: etcd
+      port: 2279
+      nodePort: 32279
+  type: NodePort
+  selector:
+    app:  etcd
+    release:  etcd

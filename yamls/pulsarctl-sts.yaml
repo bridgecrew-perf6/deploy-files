@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: pulsarctl
+  name: pulsarctl
+spec:
+  selector:
+    matchLabels: 
+      app: pulsarctl
+  serviceName: pulsarctl-svc
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pulsarctl
+    spec:
+      containers:
+        - image: ghcr.io/pulsar-sigs/pulsarctl:v2.10.4
+          name: busybox
+          imagePullPolicy: IfNotPresent
+          command: ["sh","-c"]
+          args: ["sleep 99999999999"]
+
+
