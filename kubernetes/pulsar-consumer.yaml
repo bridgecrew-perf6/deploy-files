@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulsar-consumer
+  namespace: default
+  labels:
+    app: pulsar-consumer
+spec:
+  selector:
+    matchLabels:
+      app: pulsar-consumer
+  template:
+    metadata:
+      labels:
+        app: pulsar-consumer
+    spec:
+      serviceAccountName: pulsar
+      initContainers:
+      - name: waitfor
+        image: ghcr.io/liangyuanpeng/waitfor:v1.0.0
+        imagePullPolicy: IfNotPresent
+        args:
+        - --jobname 
+        - pulsar-init
+      containers:
+        - name: pulsar-consumer
+          image: ghcr.io/pulsar-sigs/pulsar-client:v0.3.1
+          imagePullPolicy: IfNotPresent
+          readinessProbe:
+            tcpSocket:
+              port: 9494
+          args: ["consumer","--broker","pulsar://pulsar.default:6650","--topic","persistent://public/default/lan","--subscription-name","lan","--consume-time","200"]

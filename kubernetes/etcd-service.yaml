@@ -5,7 +5,7 @@ metadata:
 spec:
   ports:
     - name:  etcd
-      port: 2279
+      port: 2379
   clusterIP: None
   selector:
     app:  etcd
@@ -18,8 +18,8 @@ metadata:
 spec:
   ports:
     - name: etcd
-      port: 2279
-      nodePort: 32279
+      port: 2379
+      nodePort: 32379
   type: NodePort
   selector:
     app:  etcd

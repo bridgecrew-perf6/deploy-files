@@ -29,16 +29,35 @@ spec:
         image: apachepulsar/pulsar:2.10.0
         imagePullPolicy: IfNotPresent
         command: ["sh","-c"]
-        args: ["bin/apply-config-from-env.py conf/client.conf && bin/apply-config-from-env.py conf/bookkeeper.conf && bin/pulsar bookie"]
+        args: ["bin/apply-config-from-env.py conf/bookkeeper.conf && bin/pulsar bookie"]
         env:
         - name: PULSAR_PREFIX_metadataServiceUri
-          value: metadata-store:etcd://etcd:2379/ledgers
+          value: metadata-store:etcd://etcd-0.etcd:2379/ledgers
         - name: PULSAR_PREFIX_httpServerPort
           value: "8080"
         - name: PULSAR_PREFIX_bookiePort
           value: "3281"
         - name: PULSAR_PREFIX_autoRecoveryDaemonEnabled
           value: "false"
+        - name: PULSAR_PREFIX_journalDirectory
+          value: /data/journal
+        - name: PULSAR_PREFIX_ledgerDirectories
+          value: /data/ledger
         ports:
         - name:  bk
           containerPort: 3281
+        volumeMounts:
+          - name: bkdata
+            mountPath: /data
+        readinessProbe:
+            tcpSocket:
+              port: 3281
+  volumeClaimTemplates:
+    - metadata:
+        name: bkdata
+      spec:
+        storageClassName: openebs-hostpath
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

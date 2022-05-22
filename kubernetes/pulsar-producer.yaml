@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulsar-producer
+  namespace: default
+  labels:
+    app: pulsar-producer
+spec:
+  selector:
+    matchLabels:
+      app: pulsar-producer
+  template:
+    metadata:
+      labels:
+        app: pulsar-producer
+    spec:
+      serviceAccountName: pulsar
+      initContainers:
+      - name: waitfor
+        image: ghcr.io/liangyuanpeng/waitfor:v1.0.0
+        imagePullPolicy: IfNotPresent
+        args:
+        - --jobname 
+        - pulsar-init
+      containers:
+        - name: pulsar-producer
+          image: ghcr.io/pulsar-sigs/pulsar-client:v0.3.1
+          imagePullPolicy: IfNotPresent
+          readinessProbe:
+            tcpSocket:
+              port: 9494
+          args: ["producer","--broker","pulsar://pulsar.default:6650","--topic","persistent://public/default/lan","--produce-time","1000"]

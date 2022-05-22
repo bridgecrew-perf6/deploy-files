@@ -10,7 +10,7 @@ spec:
         image: apachepulsar/pulsar:2.10.0
         imagePullPolicy: IfNotPresent
         command: ["sh","-c"]
-        args: [" bin/pulsar initialize-cluster-metadata -c smartoilets -uw http://etcd:8080 -cms etcd://etcd:2379 -md etcd://etcd:2379"]
+        args: [" bin/pulsar initialize-cluster-metadata -c lan -uw http://pulsar:8080 -cms etcd://etcd-0.etcd:2379 -md etcd://etcd-0.etcd:2379"]
       restartPolicy: Never
   backoffLimit: 4
 

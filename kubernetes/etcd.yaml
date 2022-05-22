@@ -21,14 +21,22 @@ spec:
         image: quay.io/coreos/etcd:v3.5.4
         imagePullPolicy: IfNotPresent
         command: ["sh","-c"]
-        # command: ["sh","-c","etcd","-name","etcd1","--data-dir","/etcd-data","-advertise-client-urls","http://0.0.0.0:2279","-listen-client-urls","http://0.0.0.0:2279","-listen-peer-urls","http://0.0.0.0:2280"]
         args: ["etcd -name etcd --data-dir /etcd-data -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379 -listen-peer-urls http://0.0.0.0:2380"]
         ports:
         - name:  etcd
-          containerPort: 2279
-      # volumes:
-      # - name: configfile
-      #   configMap:
-      #     name:   etcd
-
-# ./etcd --name etcd1 --advertise-client-urls http://0.0.0.0:2379 --listen-client-urls http://0.0.0.0:2379 --listen-peer-urls http://0.0.0.0:2380
+          containerPort: 2379
+        volumeMounts:
+          - name: etcddata
+            mountPath: /etcd-data
+        readinessProbe:
+            tcpSocket:
+              port: 2379
+  volumeClaimTemplates:
+    - metadata:
+        name: etcddata
+      spec:
+        storageClassName: openebs-hostpath
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
