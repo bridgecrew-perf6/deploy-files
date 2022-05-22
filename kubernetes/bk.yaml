@@ -30,6 +30,11 @@ spec:
         imagePullPolicy: IfNotPresent
         command: ["sh","-c"]
         args: ["bin/apply-config-from-env.py conf/bookkeeper.conf && bin/pulsar bookie"]
+        securityContext:
+          privileged: true
+          capabilities:
+            add: ["SYS_ADMIN"]
+          runAsUser: 0
         env:
         - name: PULSAR_PREFIX_metadataServiceUri
           value: metadata-store:etcd://etcd-0.etcd:2379/ledgers
