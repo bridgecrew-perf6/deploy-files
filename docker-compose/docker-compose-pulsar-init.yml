@@ -1,0 +1,14 @@
+version: "3.7"
+
+services:
+
+  pulsar-init:
+    image: apachepulsar/pulsar:2.10.0
+    command: >
+      /bin/bash -c
+      "bin/pulsar initialize-cluster-metadata -c smartoilets -uw http://pulsar:8080 -cms etcd://etcd:2379 -md etcd://etcd:2379"
+    networks:
+      - pulsar
+
+networks:
+  pulsar:

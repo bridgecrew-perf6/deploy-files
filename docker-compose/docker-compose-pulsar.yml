@@ -1,0 +1,81 @@
+version: "3.7"
+
+services:
+
+  etcd:
+    restart: always
+    image: quay.io/coreos/etcd:v3.5.4
+    command: etcd -name etcd1 --data-dir /etcd-data -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379 -listen-peer-urls http://0.0.0.0:2380
+    ports:
+      - 2379:2379
+      - 2380:2380
+    volumes:
+      - ./data/etcd:/etcd-data
+    networks:
+      - pulsar
+      
+  pulsar:
+    restart: always
+    image: apachepulsar/pulsar:2.10.0
+    command: >
+      /bin/bash -c
+      "bin/apply-config-from-env.py conf/broker.conf
+      && bin/pulsar broker"
+    environment:
+      - JAVA_OPTS=-Xmx1G -Xms1G
+      - JAVA_TOOL_OPTIONS=-Xmx1G -Xms1G
+      - PULSAR_PREFIX_tlsRequireTrustedClientCertOnConnect=true
+      - PULSAR_PREFIX_functionsWorkerEnabled=true
+      - PULSAR_PREFIX_metadataStoreUrl=etcd:http://etcd:2379
+      - PULSAR_PREFIX_configurationMetadataStoreUrl=etcd:http://etcd:2379
+      - PULSAR_PREFIX_bookkeeperMetadataServiceUri=zk://192.168.3.241:2181/ledgers
+      - PULSAR_PREFIX_clusterName=lan
+      - PULSAR_PREFIX_managedLedgerDefaultEnsembleSize=1
+      - PULSAR_PREFIX_managedLedgerDefaultWriteQuorum=1
+      - PULSAR_PREFIX_managedLedgerDefaultAckQuorum=1
+      - PULSAR_PREFIX_advertisedAddress=192.168.3.228
+#      - PULSAR_PREFIX_brokerServicePort=26650
+#      - PULSAR_PREFIX_webServicePort=28080
+      - PULSAR_PREFIX_allowAutoTopicCreationType=partitioned
+    volumes:
+      - ./data/pulsar:/pulsar/data
+      - ./logs:/pulsar/logs
+    cap_add:
+      - SYS_PTRACE
+    user: root
+    ports:
+      - 6650:6650
+      - 8080:8080
+    networks:
+      - pulsar
+
+  bk:
+    restart: always
+    image: apachepulsar/pulsar:2.10.0
+    hostname: bk
+    ports:
+      - 3281:3281
+      - 38081:8080
+    volumes:
+      - ./data/bkdata:/opt/bookkeeper/data
+    environment:
+      - PULSAR_PREFIX_metadataServiceUri=metadata-store:etcd://etcd:2379/ledgers
+      - PULSAR_PREFIX_httpServerPort=8080
+      - PULSAR_PREFIX_bookiePort=3281
+      - PULSAR_PREFIX_autoRecoveryDaemonEnabled=false
+      - PULSAR_PREFIX_journalDirectory=/opt/bookkeeper/data/journal
+      - PULSAR_PREFIX_ledgerDirectories=/opt/bookkeeper/data/ledger
+      - PULSAR_PREFIX_useHostNameAsBookieID=true
+    depends_on:
+      - etcd
+    command: >
+      /bin/bash -c
+      "bin/apply-config-from-env.py conf/bookkeeper.conf
+      && bin/pulsar bookie"
+    user: root
+    privileged: true
+    networks:
+      - pulsar
+
+networks:
+  pulsar:
